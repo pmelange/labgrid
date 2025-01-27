@@ -57,3 +57,8 @@ class OneWirePIODriver(Driver, DigitalOutputProtocol):
         if self.port.invert:
             status = not status
         return status
+
+    @Driver.check_active
+    @step(result=True)
+    def invert(self):
+        self.set(not self.get())

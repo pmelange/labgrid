@@ -35,3 +35,8 @@ class ManualSwitchDriver(Driver, DigitalOutputProtocol):
     @step(result=True)
     def get(self):
         return self.status
+
+    @Driver.check_active
+    @step(result=True)
+    def invert(self):
+        self.set(not self.get())

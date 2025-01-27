@@ -43,3 +43,8 @@ class FileDigitalOutputDriver(Driver, DigitalOutputProtocol):
         out = self.true_repr if status else self.false_repr
         with open(self.filepath, "w") as fdes:
             fdes.write(out)
+
+    @Driver.check_active
+    @step(result=True)
+    def invert(self):
+        self.set(not self.get())

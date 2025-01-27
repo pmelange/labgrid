@@ -69,3 +69,8 @@ class HttpDigitalOutputDriver(Driver, DigitalOutputProtocol):
         raise ExecutionError(
             f'response does not match asserted or deasserted state: "{res.text}"'
         )
+
+    @Driver.check_active
+    @step(result=True)
+    def invert(self):
+        self.set(not self.get())

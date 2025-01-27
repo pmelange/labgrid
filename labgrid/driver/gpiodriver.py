@@ -16,6 +16,7 @@ class GpioDigitalOutputDriver(Driver, DigitalOutputProtocol):
     bindings = {
         "gpio": {"SysfsGPIO", "NetworkSysfsGPIO"},
     }
+    delay = attr.ib(default=1.0, validator=attr.validators.instance_of(float))
 
     def __attrs_post_init__(self):
         super().__attrs_post_init__()
@@ -37,9 +38,14 @@ class GpioDigitalOutputDriver(Driver, DigitalOutputProtocol):
     @Driver.check_active
     @step(args=['status'])
     def set(self, status):
-        self.proxy.set(self.gpio.index, status)
+        self.proxy.set(self.gpio.index, self.gpio.invert, status)
 
     @Driver.check_active
     @step(result=True)
     def get(self):
-        return self.proxy.get(self.gpio.index)
+        return self.proxy.get(self.gpio.index, self.gpio.invert)
+
+    @Driver.check_active
+    @step(result=True)
+    def invert(self):
+        self.set(not self.get())

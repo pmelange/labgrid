@@ -46,3 +46,8 @@ class DeditecRelaisDriver(Driver, DigitalOutputProtocol):
         if self.relais.invert:
             status = not status
         return status
+
+    @Driver.check_active
+    @step(result=True)
+    def invert(self):
+        self.set(not self.get())

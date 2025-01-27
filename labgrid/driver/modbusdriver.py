@@ -60,3 +60,7 @@ class ModbusCoilDriver(Driver, DigitalOutputProtocol):
         if self.coil.invert:
             status = not status
         return status
+
+    @Driver.check_active
+    def invert(self):
+        self.set(not self.get())

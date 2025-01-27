@@ -60,3 +60,8 @@ class SerialPortDigitalOutputDriver(Driver, DigitalOutputProtocol):
             self._p.dtr = value
         elif self.signal == "rts":
             self._p.rts = value
+
+    @Driver.check_active
+    @step(result=True)
+    def invert(self):
+        self.set(not self.get())
