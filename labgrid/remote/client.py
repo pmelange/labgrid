@@ -937,6 +937,8 @@ class ClientSession:
             drv.set(True)
         elif action == "low":
             drv.set(False)
+        elif action == "invert":
+            drv.invert()
 
     async def _console(self, place, target, timeout, *, logfile=None, loop=False, listen_only=False):
         name = self.args.name
@@ -1822,7 +1824,7 @@ def main():
     subparser.set_defaults(func=ClientSession.power)
 
     subparser = subparsers.add_parser("io", help="change (or get) a digital IO status")
-    subparser.add_argument("action", choices=["high", "low", "get"], help="action")
+    subparser.add_argument("action", choices=["high", "low", "invert", "get"], help="action")
     subparser.add_argument("name", help="optional resource name", nargs="?")
     subparser.set_defaults(func=ClientSession.digital_io)
 
