@@ -866,7 +866,7 @@ class ClientSession:
         name = self.args.name
         target = self._get_target(place)
         from ..resource.power import NetworkPowerPort, PDUDaemonPort
-        from ..resource.remote import NetworkUSBPowerPort, NetworkSiSPMPowerPort
+        from ..resource.remote import NetworkUSBPowerPort, NetworkSiSPMPowerPort, NetworkSysfsGPIO
         from ..resource import TasmotaPowerPort, NetworkYKUSHPowerPort
 
         drv = None
@@ -888,6 +888,8 @@ class ClientSession:
                     drv = self._get_driver_or_new(target, "TasmotaPowerDriver", name=name)
                 elif isinstance(resource, NetworkYKUSHPowerPort):
                     drv = self._get_driver_or_new(target, "YKUSHPowerDriver", name=name)
+                elif isinstance(resource, NetworkSysfsGPIO):
+                    drv = self._get_driver_or_new(target, "GpioDigitalOutputDriver", name=name)
                 if drv:
                     break
 
@@ -898,6 +900,32 @@ class ClientSession:
         res = getattr(drv, action)()
         if action == "get":
             print(f"power{' ' + name if name else ''} for place {place.name} is {'on' if res else 'off'}")
+
+    def button(self):
+        place = self.get_acquired_place()
+        action = self.args.action
+        delay = self.args.delay
+        name = self.args.name
+        target = self._get_target(place)
+        from ..resource.remote import NetworkSysfsGPIO
+
+        drv = None
+        try:
+            drv = target.get_driver("ButtonProtocol", name=name)
+        except NoDriverFoundError:
+            for resource in target.resources:
+                if isinstance(resource, NetworkSysfsGPIO):
+                    drv = self._get_driver_or_new(target, "GpioDigitalOutputDriver", name=name)
+                if drv:
+                    break
+
+        if not drv:
+            raise UserError("target has no compatible resource available")
+        if delay is not None:
+            drv.delay = delay
+        res = getattr(drv, action)()
+        if action == "get":
+            print(f"button{' ' + name if name else ''} for place {place.name} is {'pressed' if res else 'released'}")
 
     def digital_io(self):
         place = self.get_acquired_place()
@@ -1822,6 +1850,14 @@ def main():
     )
     subparser.add_argument("--name", "-n", help="optional resource name")
     subparser.set_defaults(func=ClientSession.power)
+
+    subparser = subparsers.add_parser("button", help="change (or get) a place's button status")
+    subparser.add_argument("action", choices=["press", "release", "press_for", "get"])
+    subparser.add_argument(
+        "-t", "--delay", type=float, default=None, help="wait time in seconds between the press and release during press_for"
+    )
+    subparser.add_argument("--name", "-n", help="optional resource name")
+    subparser.set_defaults(func=ClientSession.button)
 
     subparser = subparsers.add_parser("io", help="change (or get) a digital IO status")
     subparser.add_argument("action", choices=["high", "low", "invert", "get"], help="action")
