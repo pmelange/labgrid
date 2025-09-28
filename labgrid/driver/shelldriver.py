@@ -137,15 +137,19 @@ class ShellDriver(CommandMixin, Driver, CommandProtocol, FileTransferProtocol):
             )
 
             if index == 0:
-                if did_login and not did_silence_kernel:
+                while did_login and not did_silence_kernel:
                     # Silence the kernel and wait for another prompt
                     self.console.sendline("dmesg -n 1")
-                    did_silence_kernel = True
-                else:
-                    # we got a prompt. no need for any further action to
-                    # activate this driver.
-                    self._status = 1
-                    break
+                    index, _, _, _ = self.console.expect(["\w+:( command)? not found",
+                                                          "\[\s*\d+.\d{6}\]",
+                                                          TIMEOUT],
+                                                         timeout=0.3)
+                    if index == 2:
+                        did_silence_kernel = True
+                # we got a prompt. no need for any further action to
+                # activate this driver.
+                self._status = 1
+                break
 
             elif index == 1:
                 # we need to login
